@@ -1,0 +1,262 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gold Time</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#040810;color:#e8e7e7;font-family:"Segoe UI",Tahoma,sans-serif}
+.container{width:100%;min-height:100vh;padding:8px}
+.header{height:72px;background:linear-gradient(#16242d,#0b1119);border:2px solid #214b3e;border-radius:6px;padding:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:bold;color:#c8fafa;margin-left:auto}
+label{font-size:12px;color:#fff}
+select,input,button{height:32px;border-radius:5px;border:1px solid #355d76;padding:3px 9px;font-size:13px}
+select,input{background:#07131c;color:#e8e7e7}
+button{cursor:pointer;color:white;background:linear-gradient(#3677b8,#04498d)}
+button:hover{filter:brightness(1.25)}
+.btn-green{background:linear-gradient(#36a4b8,#047b8d)}
+.btn-red{background:linear-gradient(#d68261,#b53200)}
+.btn-dark{background:linear-gradient(#63637b,#222237)}
+.btn-gold{background:linear-gradient(#e5aa67,#95632c)}
+.progress{height:15px;position:absolute;left:10px;right:10px;top:4px}
+.message{margin:7px 0;padding:7px;text-align:center;background:#182029;color:#7285a5;border:1px solid #2d4252;border-radius:4px}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.control-group{display:flex;flex-direction:column;gap:2px}
+.table-wrap{width:100%;overflow:auto;margin-top:6px;border:2px solid #214b3e;border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:1400px;table-layout:fixed}
+th,td{border:1px solid #255747;text-align:center;padding:5px;height:45px;white-space:nowrap}
+th{background:linear-gradient(#65a895,#2f6656);color:#fff;font-size:13px;position:sticky;top:0;z-index:2}
+td{background:#0d171b;color:#c8c8c8;font-size:13px}
+tr:nth-child(even) td{background:#111e22}
+td:first-child,th:first-child{position:sticky;right:0;z-index:3;background:linear-gradient(#65a895,#2f6656)}
+.info-wrap{overflow:auto;margin-top:5px;border:2px solid #62401c;border-radius:6px}
+.info-table{min-width:1300px}
+.info-table th{background:linear-gradient(#e5aa67,#95632c)}
+.info-table td{background:#21170d;border-color:#62401c}
+.status-long{color:#55df8a;font-weight:bold}
+.status-short{color:#ff6868;font-weight:bold}
+.status-neutral{color:#e5c35c;font-weight:bold}
+.footer{margin-top:6px;padding:6px;text-align:center;color:#7285a5;font-size:12px}
+@media(max-width:800px){
+.logo{width:100%;text-align:center;margin:0}
+.header{height:auto}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+<div class="logo">🌍 GOLD TIME</div>
+
+<div class="controls">
+
+<div class="control-group">
+<label>نام ارزها</label>
+<select id="symbol">
+<option>BTC/USDT</option>
+<option>ETH/USDT</option>
+<option>SOL/USDT</option>
+<option>XRP/USDT</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>نام صرافیها</label>
+<select id="exchange">
+<option>MEXC</option>
+<option>KuCoin</option>
+<option>Binance</option>
+<option>BingX</option>
+<option>Bitget</option>
+<option>Gate.io</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>نام ارزهای منتخب</label>
+<select id="selected">
+<option>انتخاب ارز</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>تعیین زمان سیگنال</label>
+<select id="timeframe">
+<option>5 دقیقه</option>
+<option>15 دقیقه</option>
+<option>30 دقیقه</option>
+<option selected>1 ساعت</option>
+<option>2 ساعت</option>
+<option>4 ساعت</option>
+<option>8 ساعت</option>
+<option>1 روز</option>
+<option>1 هفته</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>نرخ</label>
+<input id="rate" type="number" min="0" max="1" step="0.001" value="0.100">
+</div>
+
+<button onclick="downloadSymbols()">🌍 دانلود اسامی ارزها</button>
+<button class="btn-green" onclick="startAnalysis()">🌈 شروع نوسان گیری</button>
+<button class="btn-red" onclick="stopAnalysis()">🔒 توقف نوسان گیری</button>
+<button class="btn-dark" onclick="toggleSound()">🔊 باصدا</button>
+<button class="btn-gold" onclick="exitPage()">❌ خروج</button>
+
+</div>
+</div>
+
+<div class="message" id="message">
+ابتدا نام صرافی را انتخاب کرده و سپس با فشردن کلید «دانلود اسامی ارزها» لیست ارزها را دریافت کنید 👆
+</div>
+
+<div class="table-wrap">
+<table id="candleTable">
+<thead>
+<tr>
+<th>Remaining time</th>
+<th>تایم فریم ۱ دقیقه</th>
+<th>تایم فریم ۵ دقیقه</th>
+<th>تایم فریم ۱۵ دقیقه</th>
+<th>تایم فریم ۳۰ دقیقه</th>
+<th>تایم فریم ۱ ساعت</th>
+<th>تایم فریم ۲ ساعت</th>
+<th>تایم فریم ۴ ساعت</th>
+<th>تایم فریم ۸ ساعت</th>
+<th>تایم فریم ۱ روز</th>
+<th>تایم فریم ۱ هفته</th>
+</tr>
+</thead>
+
+<tbody>
+<tr><th>Candles</th><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td><td>🕯️</td></tr>
+<tr><th>Next Price</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>PPO</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>PPO Signal Hist</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>SMII</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>IndicatorSignal</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>RsiMA</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>RSI</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>Stoch K D</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>Stoch K</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>Current Power</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+<tr><th>Next Power</th><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="info-wrap">
+<table class="info-table">
+<thead>
+<tr>
+<th>نام ارز</th>
+<th>قیمت لحظه ای</th>
+<th>سیگنال</th>
+<th>تاریخ سیگنال خرید</th>
+<th>قیمت خرید</th>
+<th>تاریخ سیگنال فروش</th>
+<th>قیمت فروش</th>
+<th>درصد سود/زیان</th>
+<th>هشدار قیمت</th>
+<th>درصد سود هشدار</th>
+<th>تایید خروج</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td id="coin">BTC/USDT</td>
+<td id="price">---</td>
+<td id="signal" class="status-neutral">WAIT</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+<td>---</td>
+<td>0.00%</td>
+<td>---</td>
+<td>0.00%</td>
+<td>---</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+<span id="date"></span> | <span id="time"></span> | GOLD TIME
+</div>
+
+</div>
+
+<script>
+let running=false;
+let sound=true;
+let timer=null;
+
+function updateClock(){
+const now=new Date();
+document.getElementById("date").textContent=now.toLocaleDateString("fa-IR");
+document.getElementById("time").textContent=now.toLocaleTimeString("fa-IR");
+}
+
+function startAnalysis(){
+running=true;
+document.getElementById("message").textContent="🌈 نوسان گیری فعال شد";
+document.getElementById("signal").textContent="RUNNING";
+document.getElementById("signal").className="status-long";
+if(!timer) timer=setInterval(updateMarket,3000);
+}
+
+function stopAnalysis(){
+running=false;
+document.getElementById("message").textContent="🔒 نوسان گیری متوقف شد";
+document.getElementById("signal").textContent="STOP";
+document.getElementById("signal").className="status-neutral";
+if(timer){clearInterval(timer);timer=null;}
+}
+
+function toggleSound(){
+sound=!sound;
+document.querySelector(".btn-dark").textContent=sound?"🔊 باصدا":"🔇 بی صدا";
+}
+
+function downloadSymbols(){
+const exchange=document.getElementById("exchange").value;
+const selected=document.getElementById("selected");
+selected.innerHTML="";
+["BTC/USDT","ETH/USDT","SOL/USDT","XRP/USDT","BNB/USDT","ADA/USDT"].forEach(x=>{
+const option=document.createElement("option");
+option.textContent=x;
+selected.appendChild(option);
+});
+document.getElementById("message").textContent="🌍 لیست ارزهای "+exchange+" دریافت شد";
+}
+
+function updateMarket(){
+if(!running)return;
+const price=(50000+Math.random()*1000).toFixed(2);
+document.getElementById("price").textContent=price;
+document.getElementById("coin").textContent=document.getElementById("selected").value||document.getElementById("symbol").value;
+
+document.querySelectorAll("#candleTable tbody td").forEach(cell=>{
+if(Math.random()>0.7)cell.textContent=(Math.random()*100).toFixed(2);
+});
+}
+
+function exitPage(){
+if(confirm("آیا می‌خواهید از Gold Time خارج شوید؟")){
+window.close();
+}
+}
+
+updateClock();
+setInterval(updateClock,1000);
+</script>
+
+</body>
+</html>
+```
